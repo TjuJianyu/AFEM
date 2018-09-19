@@ -113,7 +113,6 @@ class EntitySet(object):
         #nx.draw_circular(self.entitygraph)
         
         #fg = self.entitygraph
-        #print nx.get_edge_attributes(fg,'parentkey')
         #pos = nx.spring_layout(fg)
         #pos = nx.spring_layout(fg)
         #nx.draw_networkx_nodes(fg, pos, node_shape='.', node_size=20)
@@ -144,13 +143,12 @@ class EntitySet(object):
     def _search_path(self,shortpaths,targetnode,maxdepth,max_famous_son):
         
         def pathstypetransform(path):
-            #print "kk"
             tmppath = []
             for i in range(len(path)-1):
                 tmppath.append((path[i],path[i+1],self.entitygraph[path[i]][path[i+1]][0]['parentkey'],
                                     self.entitygraph[path[i]][path[i+1]][0]['sonkey'],'->'))
                
-            #print tmppath
+
             return tmppath
         
         if maxdepth == 0 or max_famous_son == -1:
@@ -161,34 +159,26 @@ class EntitySet(object):
         for node in self.entitygraph.nodes():
             
             ps = []
-            
-            #print node
-            #print shortpaths
 
             if node not in shortpaths or targetnode not in shortpaths[node]:
                 continue
             # check shortpath from node to targetnode <= maxdepth + 1 and it is self
             if len(shortpaths[node][targetnode]) <= maxdepth+1 and len(shortpaths[node][targetnode])!= 1:
-                #print "hh"
                 ps = pathstypetransform(shortpaths[node][targetnode])
-                #print ps
-                #print shortpaths[node][targetnode]
                 pathstype.append(ps)         
                 paths.append(shortpaths[node][targetnode])
                
             if len(shortpaths[node][targetnode]) + 1 > maxdepth + 1:
                 continue
                 
-            #print 'fuck'
-            #print ps
-            #print self.entitygraph.out_edges(node)
+
+
+
             for son in [ edge[1] for edge in self.entitygraph.out_edges(node)]:
                 
-                #print shortpaths[node][targetnode],son
                 if len(shortpaths[node][targetnode])>=2 and son == shortpaths[node][targetnode][1] and len(self.entitygraph[node][targetnode])<=1:
                     continue
-                    
-                #print son
+
                 if max_famous_son - 1 < 0:
                     continue
              
@@ -198,11 +188,8 @@ class EntitySet(object):
                 submaxdepth = maxdepth - len(shortpaths[node][targetnode])+1 - 1
                 submaxfamousson = max_famous_son-1
                 if node in self.entitygraph and targetnode in self.entitygraph[node] and len(self.entitygraph[node][targetnode]) >1 and son == shortpaths[node][targetnode][1]:
-                    #print submaxfamousson
-                    #submaxfamousson +=1
+
                     sonps = (son,node,self.entitygraph[node][son][1]['sonkey'],self.entitygraph[node][son][1]['parentkey'],'<-')
-                    #submaxdepth += 1
-                    #sonpaths,sonpathstype = self._search_path(shortpaths,son,submaxdepth, (submaxfamousson+1))
 
                 
                 pathstype.append([sonps]+ps)
@@ -238,8 +225,6 @@ class EntitySet(object):
         pass
     def getentity(self,entityid):
         try:
-       
-            #print self.entityset.keys()
             return self.entityset[entityid]
         except:
             raise Exception("id '%s' not found" % str(entityid))
@@ -253,7 +238,7 @@ class Entity(object):
         
         self.variable_types = variable_types
         self.index = self.name+"_"+index
-        #print self.dataframe.columns
+
         self.dataframe.index = self.dataframe[self.index]
         
         if time_index is None:
@@ -288,10 +273,7 @@ class Entity(object):
     def merge(self,features,path,how='right'):
 
         df,info = path.getpathdetail()
-        #print [self.index]+features
-        #print {self.index:info['lastindex']}
-        #print df.columns
-        #print self.dataframe.columns
+
         merged = self.dataframe[[self.index]+features].rename({self.index:info['lastindex']},axis=1).\
         merge(df,left_on=info['lastindex'],right_on=info['lastindex'],how=how)
 
@@ -318,7 +300,6 @@ class Generator(object):
     # TODO: target features do not have any meaning until now
 
     def layer(self,path,start_part=None,start_part_id=None):
-        #print 'a'
         
         #import collections
 
@@ -338,17 +319,13 @@ class Generator(object):
     
     def layers(self,paths,start_part=None,start_part_id=None):
         assert len(paths) > 1 
-        #assert paths
-        #[p.getfirstkey() for p in paths]
-        #[p.getlastkey() for p in paths]
+
         
         dataframe,info = self.layer(paths[0],start_part,start_part_id).getpathdetail()
-        #print len(dataframe)
-        #print dataframe.columns
+
         for p in range(1,len(paths)):
             nextdf,nextinfo = self.layer(paths[p],start_part,start_part_id).getpathdetail()
-            #print len(nextdf)
-            #print nextdf.columns
+
             renamedict = {}
             for key in info:
                 if nextinfo[key] is not info[key]:
@@ -363,7 +340,7 @@ class Generator(object):
                                             on=[info['firstindex'],info['lastindex']],
                                             how='inner')
                 
-        #print info       
+     
         return Path(paths[0].getpathstype(),dataframe,info['firstindex'],
                     info['starttimeindex'],info['lastindex'],info['lasttimeindex'],paths[0].getpathname(),start_part_id)
                                             
@@ -374,12 +351,11 @@ class Generator(object):
         assert len(path.getpathentities()) > 1
         targetentity = self.es.getentity(path.getpathentities()[0] )
         features = targetentity.getfeatname()
-        #print features
+
         featurefuncmap = {}
         for feature in features:
             featuretype =  targetentity.getfeattype(feature)
-            #print featuretype
-            #print targetentity.variable_types
+
             if featuretype == ValueType.Id:
                 featurefuncmap[feature] = ['count','nunique']
                 
@@ -447,30 +423,20 @@ class Generator(object):
             if isleftdirection == False and etype == "<-":
                 isleftdirection =True
             if i == 0 and start_part is not None:
-                #print start_part.add_suffix("pid%d" % i).columns
+   
                 dataframe = start_part[list(set(start_part.columns))].add_suffix("pid%d" % i)[leftremain[i]]
             elif i== 0 and start_part is None:
                 print left
                 dataframe = es.entityset[left].dataframe.add_suffix("pid%d" % i)[leftremain[i]]
-            #print ['%spid%d' % (name, i) for name in leftremain[i]]
-            #print dataframe.columns
-            #print len(dataframe)
-            #print es.entityset[right].dataframe[rightremain[i]]
-            #print len(es.entityset[right].dataframe[rightremain[i]])
-            
+
             a = dataframe[list(set(leftremain[i]))].head()
             b = es.entityset[right].dataframe[list(set(rightremain[i]))].add_suffix("pid%d" % (i+1)).head()
-            #print es.entityset[right].dataframe[rightremain[i]].add_suffix("pid%d" % (i+1)),left_on="%spid%d" %(leftkey, i).head()
-            
-        
+   
             
             dataframe = dataframe[leftremain[i]].merge(es.entityset[right].dataframe[rightremain[i]].add_suffix("pid%d" % (i+1)),left_on="%spid%d" %(leftkey, i),right_on="%spid%d" % (rightkey , i+1),how='left')
             if etype=="->" and isleftdirection==True:
                 dataframe = dataframe.drop_duplicates(subset=[firstkey,"%spid%d" % (rightkey,i+1)])
-            #print dataframe.columns
 
-        #print dataframe
-        #print path.getpathstype()
         remain =list(set( [firstkey,start_time_index,lastkey,last_time_index]) - set([None]))
 
         return Path(path.getpathstype(),dataframe[remain],firstkey,
@@ -483,16 +449,14 @@ class Generator(object):
         hashpstype = hash(str(path.getpathstype()))
         if hashpstype not in self.paths_feature or path.getstartpartname() != self.paths_feature[hashpstype][0]:
             merged, info = self.es.getentity(path.getlastentityid()).merge(function.keys(),path)
-            #print merged
-            #print path.getlastkey()
+
             self.paths_feature[hashpstype]=(path.getstartpartname(),merged,info)
         else:
             _,merged, info = self.paths_feature[hashpstype]
     
 
     def aggregate(self,path,function,iftimeuse = True, winsize='all',lagsize='last'):
-        #print winsize,lagsize
-        #print function
+
         def step(lagsize):
                 count = float(lagsize[0:-1])
                 unitname = lagsize[-1]
@@ -517,18 +481,16 @@ class Generator(object):
                 else:
                     feature_cols.append(key)
             merged, info = self.es.getentity(path.getlastentityid()).merge(feature_cols,path)
-            #print merged
-            #print path.getlastkey()
+
             self.paths_feature[hashpstype]=(path.getstartpartname(),merged,info)
         else:
             _,merged, info = self.paths_feature[hashpstype]
-        #print "where are you?"
+
         tmpmerged = merged 
-        #print len(tmpmerged)
-        #print merged[merged['main_index']== 34797995]
+ 
         if iftimeuse and path.getstarttimeindex() is not None and path.getlasttimeindex() is not None:
             lag = (merged[path.getstarttimeindex()]-merged[path.getlasttimeindex()]).astype(int)
-            #print lag
+    
             
             
             if winsize == 'all' and lagsize == 'last':
@@ -546,35 +508,25 @@ class Generator(object):
             else:
                 #print 'a'
                 if step(winsize) > 0:
-                    #print tmpmerged.columns
-                    #print tmpmerged[tmpmerged['main_indexpid0']==999975]
+ 
                     tmpmerged = merged[(lag>=step(lagsize)) & (lag <step(winsize)+step(lagsize))]
-                    #print tmpmerged[tmpmerged['main_indexpid0']==999975]
-                    #print lag.iloc[1858096]
-                    #print step(lagsize)
-                    #print step(winsize)+step(lagsize)
+
                 else:
                     tmpmerged = merged[(lag<=step(lagsize)) & (lag >step(winsize)+step(lagsize))]
-        #print path.getfirstkey()     
+   
         for feat in function:
             if isinstance(feat, tuple) and len(feat)==2:
                 tmpmerged['x(%s)' % (str(feat))] = tmpmerged[feat[0]] * tmpmerged[feat[1]]
                 tmpmerged['/(%s)' % (str(feat))] = tmpmerged[feat[0]] / tmpmerged[feat[1]]
                 
-                
-                #params = []
-                #for afeat in feat:
-                #    params.append(tmpmerged[afeat])
-                #tmpmerged[""] = function[feat](*params)
-                
-  
+
         
         groups = tmpmerged.groupby(path.getfirstkey())
         featingroups = set(tmpmerged.columns)-set([path.getfirstkey()])
-        #print tmpmerged
+
         newfeats = []
         newfeats_name = []
-        #print featingroups
+
         
         
         for feat in function:
@@ -586,13 +538,13 @@ class Generator(object):
             print feat
             funcs = function[feat]
             for func in funcs:
-                #print func
+
                 if callable(func):
                     if isinstance(feat,tuple):
                         newfeats.append(getattr(groups['x(%s)' % (str(feat))],func)())
                         newfeats.append(getattr(groups['/(%s)' % (str(feat))],func)())
                           
-                    #print groups[feat].apply(func)
+
                     else:
                         newfeats_name.append("%s(%s,%s)" % (func, 'x(%s)' % (str(feat)),path.getpathname()) )
                         newfeats_name.append("%s(%s,%s)" % (func, '/(%s)' % (str(feat)),path.getpathname()) )
@@ -614,8 +566,7 @@ class Generator(object):
                     except AttributeError:
                         raise NotImplementedError("Class %s does not implement %s" % (groups.__class__.__name__, func))
         newfeats = pd.concat(newfeats, axis=1)
-        #print newfeats
-        #print path.getfirstkey()
+
         newfeats.columns = newfeats_name
         #newfeats.rename_axis(path.getfirstkey(),inplace=True)
         return newfeats 
@@ -639,17 +590,17 @@ class Generator(object):
         selected = set()
         for path in paths:
             pathdetail  = path.getpathstype()
-            #print pathdetail[-1][3]
+
             selected.add(pathdetail[-1][3])
         
         selected.add(es.getentity(pathdetail[-1][1]).index)
         selected = list(selected)
-        #print selected
+
         
         starttime = es.getentity(pathdetail[-1][1]).time_index
         if starttime is not None:
             selected.append(starttime)
-        #print selected
+
         ISDROPED = False
         start = es.getentity(pathdetail[-1][1]).getcolumns(selected)
         lenstart = len(start)
@@ -660,7 +611,7 @@ class Generator(object):
             lenstart = len(start)
         if ngroups =='auto':
             ngroups = min(100,len(start))
-        #print start   
+ 
         groups = range(ngroups) * int(math.ceil(len(start) *1.0/ngroups))
         np.random.shuffle(groups)
         groups = groups[:len(start)]
@@ -692,30 +643,24 @@ class Generator(object):
         mergedres = es.getentity(pathdetail[-1][1]).getcolumns(selected[1:]).reset_index(drop=False).\
         merge(result.join(start[selected[1:]],how='left'),on=selected[1:],\
               how='left').drop(selected[1:],axis=1).set_index(es.getentity(pathdetail[-1][1]).index)
-        #print mergedres
+
         return mergedres
-        #print start
-        #print result
+
     def collect_agg(self,inputs):
-        #print inputs
+
         group,path,function,iftimeuse,winsize,lagsize = inputs
         newfeats = [] 
         for i in tqdm(xrange(len(group))):
             g = group[i]
-            #print g
+
             newpath = self.layer(path,start_part=g,start_part_id=i)  
             
             detail,name = newpath.getpathdetail()
-            #print detail
-            #print newpath.pathdetail['main_index'].nunique()
-            #print len(newpath.pathdetail)
-            #print newpath.getpathname()
+
             
             newfeats.append(self.aggregate(newpath,function,iftimeuse=iftimeuse,winsize=winsize,lagsize=lagsize))
         if len(newfeats)==1:
-            #print "1group"
-            #print newfeats[0].head()
-            #print len(newfeats[0])
+
             return newfeats[0]
         return pd.concat(newfeats)
 
@@ -765,9 +710,6 @@ class Generator(object):
     def transform(self,path,featurenames,function):
         pass
         
-
-    
-    #functionset [((0,3),funcs),((3,4),funcs),((4,7),funcs)]
     
     def singlepathcompunation(self,pathstype,targetfeatures,functionset):
         if not checkorder(functionset):
@@ -777,7 +719,7 @@ class Generator(object):
             end = layerfunc[0][1]
             subpathstype = pathstype[start:end]
             dataframe,firstkey,start_time_index,featurenames,last_time_index = self.mergelayer(subpathstype,targetfeatures)
-    #pathsfunc[(path,first_time,last_time,[features],function,asname)]
+
     def pathcompunation(self,pathsfunc):
         
         for pf in pathsfunc:
@@ -795,5 +737,5 @@ class Generator(object):
                 time_index.append(last_time)
             select_features = [features] + [firstkey] + [time_index]
             res = func(dataframe[select_features])
-            #res.columns = asname
+
 
